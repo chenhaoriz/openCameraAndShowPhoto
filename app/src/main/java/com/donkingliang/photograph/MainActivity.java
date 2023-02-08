@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private boolean isAndroidQ = Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q;
 
-    private String storage_Dir="AITO";
+    private String storage_Dir = "AITO";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +84,28 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 处理权限申请的回调。
+     *
+     * @param requestCode  requestCode
+     * @param permissions  permissions
+     * @param grantResults grantResults
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == PERMISSION_CAMERA_REQUEST_CODE) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                //允许权限，有调起相机拍照。
+                openCamera();
+            } else {
+                //拒绝权限，弹出提示框。
+                Toast.makeText(this, "拍照权限被拒绝", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -102,26 +124,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * 处理权限申请的回调。
-     *
-     * @param requestCode
-     * @param permissions
-     * @param grantResults
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == PERMISSION_CAMERA_REQUEST_CODE) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //允许权限，有调起相机拍照。
-                openCamera();
-            } else {
-                //拒绝权限，弹出提示框。
-                Toast.makeText(this, "拍照权限被拒绝", Toast.LENGTH_LONG).show();
-            }
-        }
-    }
 
     /**
      * 调起相机拍照
@@ -132,18 +134,16 @@ public class MainActivity extends AppCompatActivity {
         if (captureIntent.resolveActivity(getPackageManager()) == null) {
             return;
         }
-        Uri photoUri = null;
         if (isAndroidQ) {
             // 适配android 10
-            photoUri = createImageUri();
+            mCameraUri = createImageUri();
         } else {
             File photoFile = createImageFile();
             if (photoFile != null) {
                 mCameraImagePath = photoFile.getAbsolutePath();
-                photoUri = getPhotoFileUri(photoFile);
+                mCameraUri = getPhotoFileUri(photoFile);
             }
         }
-        mCameraUri = photoUri;
         if (mCameraUri != null) {
             captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraUri);
             captureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
